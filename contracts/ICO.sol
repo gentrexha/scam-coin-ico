@@ -51,8 +51,6 @@ contract ICO {
      */
     event CrowdsaleDone(uint256 endtime);
 
-    event DebugLog(string msg);
-
     /**
      * @param rate Number of token units a buyer gets per wei
      * @param wallet Address where collected funds will be forwarded to
