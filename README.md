@@ -24,6 +24,17 @@ to the ICO contract. Once the 1000 WETH are raised, the sale is over and no one 
 - Implementation time: 1-5 days.
 - Share the git repository with your mentor.
 
+## Deployment
+
+Deploy using hardhat:
+
+```bash
+npx hardhat compile
+npx hardhat run scripts/deploy.js --network rinkeby
+npx hardhat verify "<ScamCoin Address>" --network rinkeby "ScamCoin" "SCAM" "18" "2000000000000000000000"
+npx hardhat verify "<ICO Address>" --network rinkeby "10" "<Wallet Address>" "<ScamCoin Address>" "10000" "120"
+```
+
 ## Questions
 
 1. What is gas, gas limit and gas price?
