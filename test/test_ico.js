@@ -61,7 +61,11 @@ describe("ICO", function () {
     return { scamcoin, ico, weth, owner, addr1, addr2 };
   }
 
-  it("should successfully deploy", async function () {});
+  it("should successfully deploy", async function () {
+    expect(await ico.address).to.not.equal(
+        zeroAddress
+    );
+  });
 
   it("requires a non-zero rate", async function () {
     const ICO = await ethers.getContractFactory("ICO");
@@ -74,7 +78,7 @@ describe("ICO", function () {
             cap,
             waitTime
         )
-    ).to.be.reverted;
+    ).to.be.revertedWith("Crowdsale: rate is 0");
   });
 
   it("requires a non-null wallet", async function () {
@@ -88,14 +92,14 @@ describe("ICO", function () {
             cap,
             waitTime
         )
-    ).to.be.reverted;
+    ).to.be.revertedWith("Crowdsale: wallet is the zero address");
   });
 
   it("requires a non-null token", async function () {
     const ICO = await ethers.getContractFactory("ICO");
     await expect(
         ICO.deploy(rate, addr1.address, zeroAddress, weth.address, cap, waitTime)
-    ).to.be.reverted;
+    ).to.be.revertedWith("Crowdsale: token is the zero address");
   });
 
   it("requires a non-null acceptedToken", async function () {
@@ -109,7 +113,7 @@ describe("ICO", function () {
             cap,
             waitTime
         )
-    ).to.be.reverted;
+    ).to.be.revertedWith("Accepted Token: accepted token is the zero address");
   });
 
   it("requires a non-null cap", async function () {
@@ -123,7 +127,7 @@ describe("ICO", function () {
             "0",
             waitTime
         )
-    ).to.be.reverted;
+    ).to.be.revertedWith("Crowdsale: cap is 0");
   });
 
   it("should let you know if the cap was reached", async function () {
@@ -171,7 +175,7 @@ describe("ICO", function () {
     );
     expect(await ico.ended()).to.equal(true);
     await ethers.provider.send("evm_increaseTime", [3600]);
-    await ico.withdrawTokens(addr1.address);
+    await ico.connect(addr1).claimTokens();
   });
 
   it("should not let you withdraw tokens if the cap is not reached", async function () {
@@ -184,7 +188,7 @@ describe("ICO", function () {
         ethers.utils.parseEther("9990")
     );
     expect(await ico.ended()).to.equal(false);
-    await expect(ico.withdrawTokens(addr1.address)).to.be.revertedWith("ICO not closed");
+    await expect(ico.connect(addr1).claimTokens()).to.be.revertedWith("ICO not closed");
   });
 
   it("should not let you withdraw tokens if the cap is reached and not enough time has passed", async function () {
@@ -198,7 +202,7 @@ describe("ICO", function () {
     );
     expect(await ico.ended()).to.equal(true);
     await ethers.provider.send("evm_increaseTime", [60]);
-    await expect(ico.withdrawTokens(addr1.address)).to.be.revertedWith("Waiting Time is not over");
+    await expect(ico.connect(addr1).claimTokens()).to.be.revertedWith("Waiting Time is not over");
   });
 
   it("should not let you withdraw tokens if you are not due any", async function () {
@@ -212,6 +216,6 @@ describe("ICO", function () {
     );
     expect(await ico.ended()).to.equal(true);
     await ethers.provider.send("evm_increaseTime", [3600]);
-    await expect(ico.withdrawTokens(addr2.address)).to.be.revertedWith("beneficiary is not due any tokens");
+    await expect(ico.connect(addr2).claimTokens()).to.be.revertedWith("msg.sender is not due any tokens");
   });
 });

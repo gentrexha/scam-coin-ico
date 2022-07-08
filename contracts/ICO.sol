@@ -150,16 +150,15 @@ contract ICO {
 
     /**
      * @dev Withdraw tokens only after crowdsale ends.
-     * @param beneficiary Whose tokens will be withdrawn.
      */
-    function withdrawTokens(address beneficiary) public {
+    function claimTokens() public {
         require(ended, "ICO not closed");
         require(block.timestamp > (_endTime + _waitTime), "Waiting Time is not over");
-        uint256 amount = _balances[beneficiary];
-        require(amount > 0, "beneficiary is not due any tokens");
+        uint256 amount = _balances[msg.sender];
+        require(amount > 0, "msg.sender is not due any tokens");
 
-        _balances[beneficiary] = 0;
-        _token.mint(beneficiary, amount);
+        _balances[msg.sender] = 0;
+        _token.mint(msg.sender, amount);
     }
 
     /**

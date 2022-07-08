@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-
-contract ScamCoin is IERC20 {
+contract ScamCoin is IERC20, Ownable {
 
     string public name = "Scam Coin";
     string public symbol = "SCAM";
     uint256 public decimals = 18;
     uint256 public totalSupply = 2000;
-    address public owner;
     address public minter;
 
     mapping(address => uint256) public balanceOf;
@@ -26,8 +24,7 @@ contract ScamCoin is IERC20 {
         decimals = _decimals;
         totalSupply = _totalSupply; 
         balanceOf[msg.sender] = totalSupply;
-        owner = msg.sender;
-        minter = owner;
+        minter = owner();
     }
 
     /// @notice transfer amount of tokens to an address
@@ -47,8 +44,6 @@ contract ScamCoin is IERC20 {
     // Internal function transfer can only be called by this contract
     //  Emit Transfer Event event 
     function _transfer(address _from, address _to, uint256 _value) internal {
-        // Ensure sending is to valid address! 0x0 address can be used to burn() 
-        require(_to != address(0), "Can not transfer to zero address");
         balanceOf[_from] = balanceOf[_from] - (_value);
         balanceOf[_to] = balanceOf[_to] + (_value);
         emit Transfer(_from, _to, _value);
@@ -61,7 +56,6 @@ contract ScamCoin is IERC20 {
     //  Emit the Approval event  
     // Allow _spender to spend up to _value on your behalf
     function approve(address _spender, uint256 _value) external returns (bool) {
-        require(_spender != address(0), "Can not approve zero address");
         allowance[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
         return true;
@@ -99,8 +93,7 @@ contract ScamCoin is IERC20 {
     /// @notice set minter address
     /// @param newMinter address
     /// @return true
-    function setMinter(address newMinter) external returns (bool) {
-        require(msg.sender == owner, "Only owner can change minter");
+    function setMinter(address newMinter) external onlyOwner returns (bool) {
         require(newMinter != address(0), "Minter can not be changed to the zero address");
         minter = newMinter;
         return true;

@@ -8,6 +8,7 @@ describe("Scam Coin", function () {
   const decimalPlaces = "18";
   const initialSupply = "2000000000000000000000";
   const zeroAddress = "0x0000000000000000000000000000000000000000";
+  const oneKEther = ethers.utils.parseEther("1000");
 
   let scamcoin;
   let owner;
@@ -27,11 +28,11 @@ describe("Scam Coin", function () {
     [owner, addr1, addr2] = await ethers.getSigners();
   });
 
-  async function approveTransferTokensFixture() {
+  async function approveTransferOneKTokensFixture() {
     await scamcoin
         .connect(addr1)
-        .approve(owner.address, ethers.utils.parseEther("1000"));
-    await scamcoin.transfer(addr1.address, ethers.utils.parseEther("1000"));
+        .approve(owner.address, oneKEther);
+    await scamcoin.transfer(addr1.address, oneKEther);
     return { scamcoin, owner, addr1, addr2 };
   }
 
@@ -57,28 +58,28 @@ describe("Scam Coin", function () {
   });
 
   it("should let you send tokens to another address", async function () {
-    await scamcoin.transfer(addr1.address, ethers.utils.parseEther("1000"));
+    await scamcoin.transfer(addr1.address, oneKEther);
     expect(await scamcoin.balanceOf(addr1.address)).to.equal(
-        ethers.utils.parseEther("1000")
+        oneKEther
     );
   });
 
   it("should let you give another address the approval to send on your behalf", async function () {
     const { scamcoin, addr1, addr2 } = await loadFixture(
-        approveTransferTokensFixture
+        approveTransferOneKTokensFixture
     );
     await scamcoin.transferFrom(
         addr1.address,
         addr2.address,
-        ethers.utils.parseEther("1000")
+        oneKEther
     );
     expect(await scamcoin.balanceOf(addr2.address)).to.equal(
-        ethers.utils.parseEther("1000")
+        oneKEther
     );
   });
 
   it("should not let you spend more than you have", async function () {
-    await scamcoin.transfer(addr1.address, ethers.utils.parseEther("1000"));
+    await scamcoin.transfer(addr1.address, oneKEther);
     await expect(
         scamcoin
             .connect(addr1)
@@ -86,23 +87,9 @@ describe("Scam Coin", function () {
     ).to.be.revertedWith("Value exceeds sender's balance");
   });
 
-  it("should not let you send to the 0 address", async function () {
-    await expect(
-        scamcoin.transfer(zeroAddress, ethers.utils.parseEther("1000"))
-    ).to.be.revertedWith("Can not transfer to zero address");
-  });
-
-  it("should let you give the approval to the 0 address", async function () {
-    await expect(
-        scamcoin
-            .connect(addr1)
-            .approve(zeroAddress, ethers.utils.parseEther("1000"))
-    ).to.be.revertedWith("Can not approve zero address");
-  });
-
   it("should not let an approved address spend more than you have", async function () {
     const { scamcoin, addr1, addr2 } = await loadFixture(
-        approveTransferTokensFixture
+        approveTransferOneKTokensFixture
     );
     await expect(
         scamcoin.transferFrom(
@@ -116,8 +103,8 @@ describe("Scam Coin", function () {
   it("should not let an approved address spend more than you have approved", async function () {
     await scamcoin
         .connect(addr1)
-        .approve(owner.address, ethers.utils.parseEther("1000"));
-    await scamcoin.transfer(addr1.address, ethers.utils.parseEther("1500"));
+        .approve(owner.address, oneKEther);
+    await scamcoin.transfer(addr1.address, ethers.utils.parseEther("2000"));
     await expect(
         scamcoin.transferFrom(
             addr1.address,
@@ -128,15 +115,15 @@ describe("Scam Coin", function () {
   });
 
   it("should let you mint tokens to another address", async function () {
-    await scamcoin.mint(addr1.address, ethers.utils.parseEther("1000"));
+    await scamcoin.mint(addr1.address, oneKEther);
     expect(await scamcoin.balanceOf(addr1.address)).to.equal(
-        ethers.utils.parseEther("1000")
+        oneKEther
     );
   });
 
   it("should not let you mint tokens to the zero address", async function () {
     await expect(
-        scamcoin.mint(zeroAddress, ethers.utils.parseEther("1000"))
+        scamcoin.mint(zeroAddress, oneKEther)
     ).to.be.revertedWith("Can not mint to the zero address");
   });
 
@@ -144,7 +131,7 @@ describe("Scam Coin", function () {
     await expect(
         scamcoin
             .connect(addr1)
-            .mint(addr1.address, ethers.utils.parseEther("1000"))
+            .mint(addr1.address, oneKEther)
     ).to.be.revertedWith("Only owner can mint new coins");
   });
 
@@ -162,6 +149,6 @@ describe("Scam Coin", function () {
   it("should not let you set a new minter from another address", async function () {
     await expect(
         scamcoin.connect(addr1).setMinter(addr1.address)
-    ).to.be.revertedWith("Only owner can change minter");
+    ).to.be.revertedWith("Ownable: caller is not the owner");
   });
 });
