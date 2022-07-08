@@ -64,7 +64,6 @@ describe("ICO", function () {
   it("should successfully deploy", async function () {});
 
   it("requires a non-zero rate", async function () {
-    // TODO: Ask ben if there's a more elegant way without having to multiply this line of code 4x, similar to fixtures in Python
     const ICO = await ethers.getContractFactory("ICO");
     await expect(
         ICO.deploy(
