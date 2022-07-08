@@ -44,5 +44,18 @@ npx hardhat verify "<ICO Address>" --network rinkeby "10" "<Wallet Address>" "<S
 5. What is the difference between a smart contract and a private key controlled account?
 
 ## Answers
-
-TODO!
+1. Gas fees are payments made by users to compensate for the computing energy required to process and validate 
+transactions on the Ethereum blockchain. 
+"Gas limit" refers to the maximum amount of gas (or energy) that you're willing to spend on a particular transaction.
+Miners set the price of gas based on supply and demand for the computational power of the network needed to process
+smart contracts and other transactions.
+2. Nonce is the number of transactions sent from a given address. This value prevents double-spending, as the nonce 
+will always specify the order of transactions.
+3. A transaction hash/id is a unique string of characters that is given to every transaction that is verified and 
+added to the blockchain.
+4. As of right now I'm using `hardhat-gas-reporter`. TODO: Add more here
+5. The primary difference is that no single private key is utilized to validate transactions for smart contracts. 
+Instead, the smart contract code defines the logic behind how the account completes transactions. 
+Smart contracts are programs that operate on the Ethereum blockchain when certain criteria are satisfied. 
+Where as, for a private key controlled account they consist of a single private key that can be used to make 
+transactions and sign messages
