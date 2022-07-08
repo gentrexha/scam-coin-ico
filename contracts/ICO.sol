@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
+
 import "./ScamCoin.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 
 contract ICO {
     // The token being sold
     ScamCoin private _token;
 
-    // only accept WETH
-    // TODO: Hardcoded address in here? There should be a better alternative
-    IERC20 private WETH = IERC20(0xc778417E063141139Fce010982780140Aa0cD5Ab);
+    // only accept a certain Token
+    IERC20 private _acceptedToken;
     
     // Address where funds are collected
     address payable private _wallet;
@@ -31,7 +32,7 @@ contract ICO {
     mapping(address => uint256) private _balances;
 
     // Has our crowdsale ended
-    bool private _ended;
+    bool public ended;
 
     // time-restrictions
     uint256 private _endTime;
@@ -57,15 +58,17 @@ contract ICO {
      * @param token Address of the token being sold
      * @param cap The maximum amount of tokens in the Crowdsale
      */
-    constructor (uint256 rate, address payable wallet, ScamCoin token, uint256 cap, uint256 waitTime) {
+    constructor (uint256 rate, address payable wallet, ScamCoin token, IERC20 acceptedToken, uint256 cap, uint256 waitTime) {
         require(rate > 0, "Crowdsale: rate is 0");
         require(wallet != address(0), "Crowdsale: wallet is the zero address");
         require(address(token) != address(0), "Crowdsale: token is the zero address");
+        require(address(acceptedToken) != address(0), "Accepted Token: accepted token is the zero address");
         require(cap > 0, "Crowdsale: cap is 0");
 
         _rate = rate;
         _wallet = wallet;
         _token = token;
+        _acceptedToken = acceptedToken;
         _cap = cap;
         _waitTime = waitTime;
     }
@@ -94,7 +97,7 @@ contract ICO {
 
         // Check if we reached cap
         if (_weiRaised == _cap) {
-            _ended = true;
+            ended = true;
             _endTime = block.timestamp;
             emit CrowdsaleDone(_endTime);
         }
@@ -110,7 +113,7 @@ contract ICO {
     function _preValidatePurchase(uint256 weiAmount) internal {
         require(weiAmount != 0, "ICO: amount is 0");
         require((_weiRaised + weiAmount) <= _cap, "ICO: cap exceeded");
-        require(WETH.transferFrom(msg.sender, _wallet, weiAmount));
+        require(_acceptedToken.transferFrom(msg.sender, _wallet, weiAmount));
         this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
     }
 
@@ -150,12 +153,13 @@ contract ICO {
      * @param beneficiary Whose tokens will be withdrawn.
      */
     function withdrawTokens(address beneficiary) public {
-        require(_ended, "Crowdsale: not closed");
+        require(ended, "ICO not closed");
+        require(block.timestamp > (_endTime + _waitTime), "Waiting Time is not over");
         uint256 amount = _balances[beneficiary];
-        require(amount > 0, "Crowdsale: beneficiary is not due any tokens");
+        require(amount > 0, "beneficiary is not due any tokens");
 
         _balances[beneficiary] = 0;
-        _token.transferFrom(address(this), beneficiary, amount);
+        _token.mint(beneficiary, amount);
     }
 
     /**
